@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101828">
+<title>English Quest - 離線英文闖關</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#dfe4ec;--accent:#3157d5;--ok:#18794e;--bad:#b42318;--soft:#eef2ff}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 48px}.hero{padding:10px 2px 16px}.hero h1{margin:0;font-size:26px}.hero p{margin:7px 0 0;color:var(--muted);line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:16px}.stat{text-align:center;padding:10px 5px}.stat small{display:block;color:var(--muted);font-size:11px}.stat b{font-size:18px}
+.card{padding:17px;margin:12px 0}.tag{font-size:12px;color:var(--muted);letter-spacing:.04em}.scene{line-height:1.65}.npc{margin-top:12px;padding:14px;border-left:4px solid var(--accent);background:var(--soft);border-radius:10px;line-height:1.55}
+.sentence{font-size:18px;font-weight:700;padding:15px;background:#fafafa;border:1px solid var(--line);border-radius:12px;margin:12px 0}
+button,input{font:inherit}button{width:100%;min-height:48px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:11px 13px;margin:5px 0;text-align:left;cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent);text-align:center;font-weight:700}button.secondary{text-align:center}button:disabled{opacity:.65;cursor:default}
+input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px}
+.feedback{margin-top:12px;padding:14px;border-radius:12px;background:#f8fafc;border:1px solid var(--line);line-height:1.6}.ok{color:var(--ok);font-weight:800}.bad{color:var(--bad);font-weight:800}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row button{flex:1;min-width:145px;text-align:center}.hidden{display:none}.mastered{font-size:14px;color:var(--muted);line-height:1.65}
+.progress{height:8px;background:#e9edf4;border-radius:999px;overflow:hidden;margin-top:10px}.progress>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}.hero h1{font-size:23px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<section class="hero"><h1>English Quest</h1><p>離線英文情境闖關。先溝通，再修正；答錯的題目會進入錯題複習。</p></section>
+<div class="stats">
+ <div class="stat"><small>LEVEL</small><b id="level">1</b></div>
+ <div class="stat"><small>EXP</small><b id="xp">0</b></div>
+ <div class="stat"><small>LIFE</small><b id="life">❤️❤️❤️</b></div>
+ <div class="stat"><small>STREAK</small><b id="streak">0</b></div>
+</div>
+<section class="card">
+ <div class="tag" id="mission">MISSION 01 · HOTEL</div>
+ <h2 id="title">飯店找不到你的訂房</h2>
+ <div class="progress"><div id="bar"></div></div>
+ <p class="scene" id="scene"></p>
+ <div class="npc"><small>NPC</small><div id="npc"></div></div>
+</section>
+<section class="card" id="game">
+ <div class="tag" id="typeLabel">🔎 揪錯任務</div>
+ <div id="prompt"></div>
+ <div id="answers"></div>
+ <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+ <button id="next" class="primary hidden" type="button">下一題 →</button>
+</section>
+<section class="card">
+ <div class="row"><button id="review" class="secondary" type="button">錯題複習</button><button id="reset" class="secondary" type="button">重新開始</button></div>
+ <h3>本次掌握</h3><div id="mastered" class="mastered">還沒有紀錄。</div>
+</section>
+<footer>資料只存在這台裝置的瀏覽器中。遊戲本身不需要網路。</footer>
+</main>
+<script>
+(()=>{
+const Q=[
+{m:"HOTEL",t:"飯店找不到你的訂房",scene:"你抵達飯店，但櫃台找不到訂房。",npc:"When did you make the booking?",type:"fix",p:"I booking two month ago in Agoda.",o:["booking → booked","month → months","in → through","整句完全正確"],a:0,good:"I booked it two months ago through Agoda.",note:"主要錯誤是過去式 booked；另外 two months、through Agoda 更自然。"},
+{m:"HOTEL",t:"請櫃台等一下",scene:"櫃台請你出示確認信。",npc:"Could you show me your confirmation email?",type:"fix",p:"Yes. Please wait me a minute.",o:["wait me → give me / wait a minute","Please → Please to","minute → minuteses","整句完全正確"],a:0,good:"Sure. Give me a minute, please.",note:"英文通常不說 wait me；可說 Wait a minute 或 Give me a minute."},
+{m:"HOTEL",t:"確認住宿天數",scene:"櫃台確認你的房型與住宿天數。",npc:"You're staying for two nights, correct?",type:"choice",p:"哪一句最自然？",o:["Yes, we live here two nights.","Yes, we're staying for two nights.","Yes, we are living two night.","Yes, stay two nights we."],a:1,good:"Yes, we're staying for two nights.",note:"短期住宿用 stay；live 通常表示居住。"},
+{m:"RESTAURANT",t:"詢問早餐地點",scene:"櫃台告訴你早餐時間。",npc:"Breakfast is served from 7 to 10 a.m.",type:"fix",p:"Where I can eat the breakfast?",o:["Where I can → Where can I","breakfast → breakfasts","eat → ate","完全正確"],a:0,good:"Where can I have breakfast?",note:"疑問句要倒裝：Where can I…？have breakfast 也比 eat the breakfast 自然。"},
+{m:"AIRPORT",t:"找登機門",scene:"你在機場找不到登機門。",npc:"How can I help you?",type:"choice",p:"你想問『我的登機門在哪裡？』",o:["Where is my boarding gate?","Where my airplane door?","My gate where is?","How much is my gate?"],a:0,good:"Where is my boarding gate?",note:"boarding gate = 登機門。實際上也常直接說 Where is Gate 12?"},
+{m:"RESTAURANT",t:"點餐時確認辣度",scene:"你想確認這道料理會不會很辣。",npc:"Are you ready to order?",type:"input",p:"請輸入英文：『這道菜很辣嗎？』",keys:["is this dish spicy","is it spicy","is this spicy"],good:"Is this dish spicy?",note:"dish 指一道菜；spicy 指辛辣。"},
+{m:"SHOPPING",t:"詢問是否能刷卡",scene:"你準備結帳，不確定店家是否接受信用卡。",npc:"That'll be twenty dollars.",type:"input",p:"請輸入英文：『可以刷信用卡嗎？』",keys:["can i pay by credit card","can i pay with a credit card","do you accept credit cards","do you take credit cards"],good:"Can I pay by credit card?",note:"Do you accept credit cards? 也非常自然。"},
+{m:"CRISIS",t:"行李沒有出現",scene:"所有行李都領完了，但你的行李沒有出現。",npc:"What seems to be the problem?",type:"choice",p:"哪一句最適合？",o:["My luggage hasn't arrived.","My luggage didn't came.","My baggage is disappear.","I no have luggage."],a:0,good:"My luggage hasn't arrived.",note:"luggage 是不可數名詞；hasn't arrived 表示到現在仍未抵達。"}
+];
+let state={i:0,xp:0,life:3,streak:0,wrong:[],mastered:[],review:false};
+try{const s=JSON.parse(localStorage.getItem("englishQuestState"));if(s&&typeof s.i==="number")state={...state,...s}}catch(e){}
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem("englishQuestState",JSON.stringify(state))}catch(e){}}
+function currentList(){return state.review&&state.wrong.length?state.wrong.map(n=>Q[n]):Q}
+function currentOriginalIndex(){if(!state.review)return state.i;return state.wrong[state.i]??0}
+function norm(s){return s.toLowerCase().replace(/[?.!,']/g,"").replace(/\s+/g," ").trim()}
+function stats(){$("xp").textContent=state.xp;$("level").textContent=1+Math.floor(state.xp/60);$("life").textContent="❤️".repeat(state.life)+"♡".repeat(3-state.life);$("streak").textContent=state.streak;$("mastered").textContent=state.mastered.length?state.mastered.slice(-8).join(" · "):"還沒有紀錄。"}
+function render(){
+ const list=currentList(); if(!list.length){$("game").innerHTML="<h3>目前沒有錯題。</h3><p>先完成幾個關卡，再回來複習。</p>";return}
+ if(state.i>=list.length)state.i=0;
+ const q=list[state.i]; $("mission").textContent=(state.review?"REVIEW":"MISSION")+" · "+q.m;$("title").textContent=q.t;$("scene").textContent=q.scene;$("npc").textContent=q.npc;$("bar").style.width=((state.i+1)/list.length*100)+"%";
+ $("typeLabel").textContent=q.type==="fix"?"🔎 揪錯任務":q.type==="input"?"⌨️ 自己說":"🎯 情境選句";
+ $("prompt").innerHTML='<div class="sentence">'+q.p+"</div>";$("answers").innerHTML="";$("feedback").classList.add("hidden");$("next").classList.add("hidden");
+ if(q.type==="input"){const inp=document.createElement("input");inp.placeholder="Type your answer in English";inp.autocomplete="off";const b=document.createElement("button");b.className="primary";b.textContent="送出答案";b.addEventListener("click",()=>judgeInput(q,inp.value));inp.addEventListener("keydown",e=>{if(e.key==="Enter")judgeInput(q,inp.value)});$("answers").append(inp,b);inp.focus()}
+ else q.o.forEach((x,n)=>{const b=document.createElement("button");b.textContent=String.fromCharCode(65+n)+". "+x;b.addEventListener("click",()=>judge(q,n===q.a));$("answers").appendChild(b)});
+ stats();save();
+}
+function finish(q,ok){
+ const oi=currentOriginalIndex(); if(ok){state.xp+=20;state.streak++;if(!state.mastered.includes(q.good))state.mastered.push(q.good);if(state.review)state.wrong=state.wrong.filter(x=>x!==oi)}
+ else{state.life=Math.max(0,state.life-1);state.streak=0;if(!state.wrong.includes(oi))state.wrong.push(oi)}
+ $("feedback").innerHTML='<div class="'+(ok?"ok":"bad")+'">'+(ok?"✓ 正確！ +20 EXP":"✕ 還可以更自然")+'</div><div>'+q.note+'</div><div><b>推薦：</b> '+q.good+"</div>";$("feedback").classList.remove("hidden");$("next").classList.remove("hidden");[...$("answers").querySelectorAll("button,input")].forEach(x=>x.disabled=true);stats();save()
+}
+function judge(q,ok){finish(q,ok)}
+function judgeInput(q,v){if(!v.trim())return;const n=norm(v);const ok=q.keys.some(k=>n===norm(k));finish(q,ok)}
+$("next").addEventListener("click",()=>{const list=currentList();state.i++;if(state.i>=list.length){state.i=0;if(state.review){state.review=false;alert("錯題複習完成，返回主線。")}else alert("本輪完成！會從第一關繼續練習。")}render()});
+$("review").addEventListener("click",()=>{if(!state.wrong.length){alert("目前沒有錯題。");return}state.review=true;state.i=0;render()});
+$("reset").addEventListener("click",()=>{if(confirm("確定清除進度並重新開始？")){state={i:0,xp:0,life:3,streak:0,wrong:[],mastered:[],review:false};save();render()}});
+render();
+})();
+</script>
+</body>
+</html>
